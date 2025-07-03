@@ -7,7 +7,7 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation';
 
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  CalendarIcon, Users as UsersIcon, Trash2, UserPlus, Trophy, MapPin, Clock, FileText, XCircle, Layers, PlusCircle, Tag, TestTube2, Pencil, Swords, Eraser
+  CalendarIcon, Users as UsersIcon, Trash2, UserPlus, Trophy, MapPin, Clock, FileText, XCircle, Layers, PlusCircle, Tag, TestTube2, Pencil, Swords, Eraser, Upload, Download
 } from "lucide-react";
 import {
   Dialog,
@@ -60,7 +60,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { TorneoActivoData, CategoriaConDuplas as CategoriaConDuplasFromActive, PlayerFormValues as PlayerFormValuesFromActiveTournament } from '../active-tournament/page';
 
@@ -120,6 +119,7 @@ export default function TournamentPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [playerPool, setPlayerPool] = useState<{name: string, rut: string}[]>([]);
   const [isClearPoolDialogOpen, setIsClearPoolDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
  
   const form = useForm<TournamentFormValues>({
     resolver: zodResolver(tournamentFormSchema),
@@ -333,7 +333,6 @@ export default function TournamentPage() {
     playersToAdd.forEach(player => {
       if (player.name && player.rut) {
         const isInPool = playerPool.some(p => p.rut === player.rut);
-        // Also check if it's already in the list to be added
         const isAlreadyInNewList = newPlayersForPool.some(p => p.rut === player.rut);
         if (!isInPool && !isAlreadyInNewList) {
           newPlayersForPool.push({ name: player.name, rut: player.rut });
@@ -468,9 +467,122 @@ export default function TournamentPage() {
     });
   };
 
+  const handleExportCSV = () => {
+      const duplasToExport = form.getValues("duplas");
+      if (duplasToExport.length === 0) {
+        toast({
+          title: "No hay duplas para exportar",
+          description: "Añade al menos una dupla antes de exportar.",
+        });
+        return;
+      }
+
+      const categoriesMap = new Map(watchedCategories.map(c => [c.id, getCategoryName(c.id)]));
+      
+      const headers = ["player1_name", "player1_rut", "player2_name", "player2_rut", "category_name"];
+      const csvRows = [headers.join(',')];
+
+      duplasToExport.forEach(dupla => {
+        const row = [
+          dupla.player1.name,
+          dupla.player1.rut || '',
+          dupla.player2.name,
+          dupla.player2.rut || '',
+          categoriesMap.get(dupla.categoryId) || 'SIN CATEGORIA'
+        ];
+        csvRows.push(row.map(value => `"${value.replace(/"/g, '""')}"`).join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      const tournamentName = form.getValues("tournamentName") || "torneo";
+      link.setAttribute('download', `duplas_${tournamentName.replace(/\s+/g, '_').toLowerCase()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+          title: "Exportación exitosa",
+          description: `${duplasToExport.length} duplas han sido exportadas.`,
+      });
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          const text = e.target?.result as string;
+          if (!text) return;
+
+          const categoriesMap = new Map(watchedCategories.map(c => [getCategoryName(c.id).toLowerCase(), c.id]));
+          const rows = text.split('\n');
+          const header = rows.shift()?.toLowerCase().split(',').map(h => h.trim().replace(/"/g, '')) || [];
+          
+          const expectedHeaders = ["player1_name", "player1_rut", "player2_name", "player2_rut", "category_name"];
+          if(JSON.stringify(header) !== JSON.stringify(expectedHeaders)){
+              toast({
+                  title: "Error de Formato",
+                  description: "Las cabeceras del CSV no coinciden con el formato esperado. Revisa el archivo e inténtalo de nuevo.",
+                  variant: "destructive"
+              });
+              return;
+          }
+
+          let importedCount = 0;
+          let errorCount = 0;
+
+          rows.forEach((rowStr, index) => {
+              if (rowStr.trim() === '') return;
+              
+              const columns = rowStr.split(',').map(col => col.trim().replace(/"/g, ''));
+              if (columns.length < 5) {
+                  errorCount++;
+                  console.warn(`Fila ${index + 2} ignorada: número incorrecto de columnas.`);
+                  return;
+              }
+              
+              const [p1Name, p1Rut, p2Name, p2Rut, catName] = columns;
+              const categoryId = categoriesMap.get(catName.toLowerCase());
+
+              if (!categoryId) {
+                  errorCount++;
+                  console.warn(`Fila ${index + 2} ignorada: Categoría "${catName}" no encontrada.`);
+                  return;
+              }
+
+              appendDupla({
+                  id: crypto.randomUUID(),
+                  player1: { name: p1Name, rut: p1Rut },
+                  player2: { name: p2Name, rut: p2Rut },
+                  categoryId: categoryId,
+              });
+              importedCount++;
+          });
+          
+          toast({
+              title: "Importación completada",
+              description: `${importedCount} duplas importadas. ${errorCount > 0 ? `${errorCount} filas con errores fueron ignoradas.` : ''}`,
+          });
+          
+          if(fileInputRef.current) {
+              fileInputRef.current.value = "";
+          }
+      };
+      reader.readAsText(file);
+  };
+
+  const triggerFileInput = () => {
+      fileInputRef.current?.click();
+  };
 
   return (
     <div className="container mx-auto flex flex-col items-center flex-1 py-8 px-4 md:px-6">
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".csv" className="hidden" />
       <AlertDialog open={isClearPoolDialogOpen} onOpenChange={setIsClearPoolDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -712,13 +824,21 @@ export default function TournamentPage() {
 
           <Card className="shadow-lg">
             <CardHeader>
-              <div className="flex justify-between items-center">
+               <div className="flex justify-between items-center flex-wrap gap-2">
                  <CardTitle className="text-2xl flex items-center"><UsersIcon className="mr-2 h-6 w-6 text-primary" />Inscribir Duplas</CardTitle>
-                 <Button type="button" variant="outline" size="sm" onClick={() => setIsClearPoolDialogOpen(true)} disabled={playerPool.length === 0}>
-                    <Eraser className="mr-2 h-4 w-4" /> Limpiar Jugadores Guardados
-                  </Button>
+                 <div className="flex gap-2 flex-wrap">
+                     <Button type="button" variant="outline" size="sm" onClick={triggerFileInput}>
+                        <Upload className="mr-2 h-4 w-4" /> Importar CSV
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={handleExportCSV}>
+                        <Download className="mr-2 h-4 w-4" /> Exportar CSV
+                      </Button>
+                     <Button type="button" variant="outline" size="sm" onClick={() => setIsClearPoolDialogOpen(true)} disabled={playerPool.length === 0}>
+                        <Eraser className="mr-2 h-4 w-4" /> Limpiar Jugadores
+                      </Button>
+                 </div>
               </div>
-              <CardDescription>Añade las duplas participantes. Los nuevos jugadores con RUT se guardarán para futuros torneos.</CardDescription>
+              <CardDescription>Añade las duplas participantes. Puedes importar/exportar un CSV. Los nuevos jugadores con RUT se guardarán.</CardDescription>
             </CardHeader>
             <CardContent>
               {watchedCategories.length === 0 ? (
