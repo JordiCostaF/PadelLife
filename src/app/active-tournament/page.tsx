@@ -466,6 +466,37 @@ function generateAndOrderGroupMatches(duplasInGroup: Dupla[], groupId: string, i
     return [match1, match2, match3, match4];
   }
   
+  // Specific schedule for Americano mode with 5 duplas
+  if (isAmericanoMode && duplasInGroup.length === 5) {
+    const [d1, d2, d3, d4, d5] = duplasInGroup; // A, B, C, D, E
+    const matchTuples: [Dupla, Dupla][] = [
+      [d1, d2], // Partido 1: A vs B
+      [d3, d4], // Partido 2: C vs D
+      [d5, d1], // Partido 3: E vs A
+      [d2, d3], // Partido 4: B vs C
+      [d4, d5], // Partido 5: D vs E
+      [d1, d3], // Partido 6: A vs C
+      [d2, d4], // Partido 7: B vs D
+      [d3, d5], // Partido 8: C vs E
+      [d1, d4], // Partido 9: A vs D
+      [d2, d5], // Partido 10: B vs E
+    ];
+
+    return matchTuples.map((tuple, index) => ({
+      id: `${groupId}-M${index + 1}`,
+      dupla1: tuple[0],
+      dupla2: tuple[1],
+      status: 'pending',
+      groupOriginId: groupId,
+      court: undefined,
+      time: undefined,
+      score1: undefined,
+      score2: undefined,
+      winnerId: undefined,
+      round: undefined,
+    }));
+  }
+  
   // Modo Americano (Round Robin) for all other cases
   const allPossibleMatchTuples: [Dupla, Dupla][] = [];
   for (let i = 0; i < duplasInGroup.length; i++) {
