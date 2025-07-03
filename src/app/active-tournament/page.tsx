@@ -544,7 +544,7 @@ const recalculateMatchTimesForGroup = (group: Group, tournamentDate: string, sta
   
   const lastPlayedByDuplaInGroup = new Map<string, Date>();
 
-  for (let i = 0; < updatedGroup.matches.length; i++) {
+  for (let i = 0; i < updatedGroup.matches.length; i++) {
     const match = updatedGroup.matches[i];
     
     // Saltarse los partidos completados, su hora es fija.
@@ -3046,5 +3046,7 @@ export default function ActiveTournamentPage() {
     </Suspense>
   );
 }
+
+    
 
     
