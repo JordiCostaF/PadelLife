@@ -15,7 +15,16 @@ Asegúrate de tener instalado [Node.js](https://nodejs.org/) en tu sistema. Se r
 node -v
 ```
 
-### Pasos de Instalación y Ejecución
+### Opción 1: Ejecución Automática (Windows)
+
+Si estás en Windows, puedes usar el script de inicio que he creado para ti.
+
+1.  Busca el archivo `iniciar.bat` en la carpeta principal del proyecto.
+2.  Haz doble clic en él.
+
+Este script se encargará de instalar las dependencias, iniciar el servidor y abrir la aplicación en tu navegador automáticamente.
+
+### Opción 2: Ejecución Manual
 
 1.  **Abre una terminal** en la carpeta donde descargaste el proyecto.
 
