@@ -178,6 +178,14 @@ interface ActiveTimerInfo {
   matches: Match[];
 }
 
+// Helper function to sort timers numerically by court number
+const sortActiveTimers = (timers: ActiveTimerInfo[]): ActiveTimerInfo[] => {
+  return [...timers].sort((a, b) => 
+    a.court.toString().localeCompare(b.court.toString(), 'es', { numeric: true })
+  );
+};
+
+
 // Helper function to shuffle an array
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -195,7 +203,7 @@ function compareStandingsNumerically(sA: Standing, sB: Standing): number {
   if (sA.pg !== sB.pg) return sB.pg - sA.pg;
   // 3. Diferencia de Puntos (descendente)
   const diffA = sA.pf - sA.pc;
-  const diffB = sB.pf - sB.pc;
+  const diffB = sB.pf - sA.pc;
   if (diffA !== diffB) return diffB - diffA;
   // 4. Puntos a Favor (descendente)
   if (sA.pf !== sB.pf) return sB.pf - sA.pf;
@@ -536,7 +544,7 @@ const recalculateMatchTimesForGroup = (group: Group, tournamentDate: string, sta
   
   const lastPlayedByDuplaInGroup = new Map<string, Date>();
 
-  for (let i = 0; i < updatedGroup.matches.length; i++) {
+  for (let i = 0; < updatedGroup.matches.length; i++) {
     const match = updatedGroup.matches[i];
     
     // Saltarse los partidos completados, su hora es fija.
@@ -1123,7 +1131,7 @@ function ActiveTournamentPageComponent() {
           }
           setGroupScheduleSettings(initialGroupSettings);
           setGroupTimers(initialTimers);
-          setActiveTimers(loadedActiveTimers);
+          setActiveTimers(sortActiveTimers(loadedActiveTimers));
 
         } else {
           setFixture(null);
@@ -1449,7 +1457,7 @@ function ActiveTournamentPageComponent() {
         } else {
             updatedTimers.push(newTimerInfo);
         }
-        return updatedTimers.sort((a, b) => a.court.toString().localeCompare(b.court.toString()));
+        return sortActiveTimers(updatedTimers);
     });
 
 
@@ -2839,7 +2847,7 @@ const handleConfirmPlayoffSchedule = () => {
                                             <p className="text-sm text-muted-foreground mb-6">
                                                 {catFixture.groups.length === 0 || catFixture.groups.every(g => g.matches.every(m => m.status === 'completed')) 
                                                     ? "Define la configuración y programa los horarios y canchas para los playoffs." 
-                                                    : "Completa todos los partidos de grupo y registra sus resultados para poder programar los playoffs."
+                                                    : "Completa todos los partidos de grupo de esta categoría y registra sus resultados para poder programar los playoffs."
                                                 }
                                             </p>
                                             
@@ -3038,3 +3046,5 @@ export default function ActiveTournamentPage() {
     </Suspense>
   );
 }
+
+    
