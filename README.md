@@ -17,12 +17,18 @@ node -v
 
 ### Opción 1: Ejecución Automática (Windows)
 
-Si estás en Windows, puedes usar el script de inicio que he creado para ti.
+Si estás en Windows, he creado un script para simplificar el proceso.
 
 1.  Busca el archivo `iniciar.bat` en la carpeta principal del proyecto.
 2.  Haz doble clic en él.
 
-Este script se encargará de instalar las dependencias, iniciar el servidor y abrir la aplicación en tu navegador automáticamente.
+Este script hará lo siguiente:
+*   Verificará si tienes Node.js.
+*   Instalará las dependencias necesarias (`npm install`).
+*   **Abrirá una nueva ventana de terminal** para ejecutar el servidor de desarrollo. **No cierres esta nueva ventana**, ya que es la que mantiene la aplicación funcionando.
+*   Esperará unos segundos y abrirá la aplicación en tu navegador.
+
+**Nota:** Si el navegador se abre pero muestra un error, espera unos segundos más a que termine de compilar en la ventana del servidor y luego actualiza la página.
 
 ### Opción 2: Ejecución Manual
 
