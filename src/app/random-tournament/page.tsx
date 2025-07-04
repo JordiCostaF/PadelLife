@@ -296,7 +296,7 @@ export default function RandomTournamentPage() {
   
     try {
       let listaTorneosActivos: TorneoActivoData[] = [];
-      const storedLista = sessionStorage.getItem('listaTorneosActivos');
+      const storedLista = localStorage.getItem('listaTorneosActivos');
       if (storedLista) {
         listaTorneosActivos = JSON.parse(storedLista);
       }
@@ -308,7 +308,7 @@ export default function RandomTournamentPage() {
         listaTorneosActivos.push(newTournamentData);
       }
       
-      sessionStorage.setItem('listaTorneosActivos', JSON.stringify(listaTorneosActivos));
+      localStorage.setItem('listaTorneosActivos', JSON.stringify(listaTorneosActivos));
 
       toast({
         title: "Torneo Registrado y Duplas Generadas",
@@ -316,7 +316,7 @@ export default function RandomTournamentPage() {
       });
       router.push(`/active-tournament?tournamentName=${encodeURIComponent(newTournamentData.tournamentName)}`);
     } catch (error) {
-      console.error("Error saving to sessionStorage:", error);
+      console.error("Error saving to localStorage:", error);
       toast({
         title: "Error al Guardar",
         description: "No se pudo guardar el torneo en la sesión del navegador. Intenta de nuevo.",

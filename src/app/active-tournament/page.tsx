@@ -1042,7 +1042,7 @@ function ActiveTournamentPageComponent() {
   const loadTournamentData = useCallback((nameToLoad?: string | null) => {
     setIsLoading(true);
     try {
-      const storedLista = sessionStorage.getItem('listaTorneosActivos');
+      const storedLista = localStorage.getItem('listaTorneosActivos');
       let loadedLista: TorneoActivoData[] = [];
       if (storedLista) {
         loadedLista = JSON.parse(storedLista);
@@ -1121,7 +1121,7 @@ function ActiveTournamentPageComponent() {
         setPlayThirdPlace(parsedTorneo.playThirdPlace ?? true);
         setIsAmericanoMode(parsedTorneo.isAmericanoMode ?? false);
         
-        const storedFixture = sessionStorage.getItem(`fixture_${parsedTorneo.tournamentName}`);
+        const storedFixture = localStorage.getItem(`fixture_${parsedTorneo.tournamentName}`);
         if (storedFixture) {
           const parsedFixture = JSON.parse(storedFixture);
           setFixture(parsedFixture);
@@ -1181,7 +1181,7 @@ function ActiveTournamentPageComponent() {
         }
       }
     } catch (error) {
-      console.error("Error reading or parsing sessionStorage:", error);
+      console.error("Error reading or parsing localStorage:", error);
       toast({ title: "Error de Carga", description: "No se pudieron cargar los datos del torneo.", variant: "destructive" });
       setTorneo(null);
       setFixture(null);
@@ -1252,7 +1252,7 @@ function ActiveTournamentPageComponent() {
             t.tournamentName === currentTournamentName ? updatedTorneoData : t
         );
         setListaTorneos(updatedList);
-        sessionStorage.setItem('listaTorneosActivos', JSON.stringify(updatedList));
+        localStorage.setItem('listaTorneosActivos', JSON.stringify(updatedList));
         toast({ title: "Ajuste Guardado", description: toastDescription });
     }
   };
@@ -1423,7 +1423,7 @@ function ActiveTournamentPageComponent() {
     setGroupTimers(newTimersState);
     
     if (torneo) {
-      sessionStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
+      localStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
     }
     toast({ title: "Enfrentamientos Generados", description: `Se han creado los grupos para ${categoryName}.` });
   };
@@ -1493,7 +1493,7 @@ function ActiveTournamentPageComponent() {
 
 
     setFixture(newFixture);
-    sessionStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
+    localStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
     toast({ title: "Grupo Programado", description: `Partidos del ${groupToSchedule.name} actualizados con cancha ${assignedCourt}, comenzando a las ${groupStartTimeStr} con duración de ${groupMatchDuration} min.` });
   };
   
@@ -1551,7 +1551,7 @@ function ActiveTournamentPageComponent() {
       ));
 
       setFixture(newFixture);
-      sessionStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
+      localStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
       toast({ title: "Partidos Reordenados", description: `Se actualizó el horario para el ${group.name}.` });
   };
 
@@ -1559,11 +1559,11 @@ function ActiveTournamentPageComponent() {
   const handleDeleteTournamentConfirm = () => {
     if (torneo) {
       const currentTournamentName = torneo.tournamentName;
-      sessionStorage.removeItem(`fixture_${currentTournamentName}`);
+      localStorage.removeItem(`fixture_${currentTournamentName}`);
       
       const updatedList = listaTorneos.filter(t => t.tournamentName !== currentTournamentName);
       setListaTorneos(updatedList);
-      sessionStorage.setItem('listaTorneosActivos', JSON.stringify(updatedList));
+      localStorage.setItem('listaTorneosActivos', JSON.stringify(updatedList));
       
       setFixture(null); 
       setTorneo(null);   
@@ -1801,7 +1801,7 @@ function ActiveTournamentPageComponent() {
 
     if (matchFound) {
         setFixture(newFixture);
-        sessionStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
+        localStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
         toast({ title: "Resultado Guardado", description: `El resultado para ${currentEditingMatch.dupla1.nombre} vs ${currentEditingMatch.dupla2.nombre} ha sido actualizado.` });
     } else {
         toast({ title: "Error", description: "No se pudo encontrar el partido para actualizar.", variant: "destructive" });
@@ -2120,7 +2120,7 @@ const handleConfirmPlayoffSchedule = () => {
     }
     
     setFixture(newFixture);
-    sessionStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
+    localStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(newFixture));
     toast({ title: "Playoffs Programados", description: `Playoffs para ${categoryForPlayoffScheduling.type} - ${categoryForPlayoffScheduling.level} programados.` });
     setIsPlayoffSchedulerDialogOpen(false);
 };
@@ -2200,7 +2200,7 @@ const handleConfirmPlayoffSchedule = () => {
             }
         });
         setFixture(updatedFixture);
-        sessionStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(updatedFixture));
+        localStorage.setItem(`fixture_${torneo.tournamentName}`, JSON.stringify(updatedFixture));
     }
 
     setTorneo(updatedTorneo);
@@ -2208,7 +2208,7 @@ const handleConfirmPlayoffSchedule = () => {
         t.tournamentName === updatedTorneo.tournamentName ? updatedTorneo : t
     );
     setListaTorneos(updatedList);
-    sessionStorage.setItem('listaTorneosActivos', JSON.stringify(updatedList));
+    localStorage.setItem('listaTorneosActivos', JSON.stringify(updatedList));
 
     setActiveTimers(prevActiveTimers => {
         const newActiveTimers = JSON.parse(JSON.stringify(prevActiveTimers)) as ActiveTimerInfo[];
@@ -3081,3 +3081,4 @@ export default function ActiveTournamentPage() {
     
 
     
+
